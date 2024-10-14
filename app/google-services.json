@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "180549270258",
+    "project_id": "commentsharingapplication",
+    "storage_bucket": "commentsharingapplication.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:180549270258:android:70680a4086d21170166e6b",
+        "android_client_info": {
+          "package_name": "com.emrehayat.commentsharingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmJivYfU3NvIJw3m0J8f4k74akKVUh8zs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
