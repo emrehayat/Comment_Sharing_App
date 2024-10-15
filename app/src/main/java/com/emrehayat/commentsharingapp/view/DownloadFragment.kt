@@ -28,6 +28,16 @@ class DownloadFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.yukleButton.setOnClickListener { yuklemeyiYap(it) }
+        binding.imageView.setOnClickListener { gorseliSec(it) }
+    }
+
+    fun yuklemeyiYap(view: View) {
+
+    }
+
+    fun gorseliSec(view: View) {
+
     }
 
     override fun onDestroyView() {

@@ -46,11 +46,5 @@
         <action
             android:id="@+id/action_feedFragment_to_userFragment"
             app:destination="@id/userFragment" />
-        <argument
-            android:name="username"
-            app:argType="string" />
-        <argument
-            android:name="comment"
-            app:argType="string" />
     </fragment>
 </navigation>
