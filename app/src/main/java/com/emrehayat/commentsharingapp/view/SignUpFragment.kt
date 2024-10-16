@@ -51,6 +51,8 @@ class SignUpFragment : Fragment() {
                     Toast.makeText(requireContext(), task.exception?.localizedMessage, Toast.LENGTH_LONG).show()
                 }
             }
+        } else {
+            Toast.makeText(requireContext(), "Lütfen ilgili yerleri doldurunuz!", Toast.LENGTH_LONG).show()
         }
     }
 
