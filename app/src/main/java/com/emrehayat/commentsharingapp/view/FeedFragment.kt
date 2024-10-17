@@ -63,7 +63,7 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
         binding.commentRecyclerView.adapter = adapter
     }
 
-    private fun verileriAlFirestore() {
+    /*private fun verileriAlFirestore() {
         db.collection("Posts").orderBy("date", Query.Direction.DESCENDING).addSnapshotListener { value, error ->
             if (error != null) {
                 Toast.makeText(requireContext(), error.localizedMessage, Toast.LENGTH_LONG).show()
@@ -86,7 +86,32 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
                 }
             }
         }
+    }*/
+
+    private fun verileriAlFirestore() {
+        db.collection("Posts").orderBy("date", Query.Direction.DESCENDING).addSnapshotListener { value, error ->
+            if (error != null) {
+                Toast.makeText(requireContext(), error.localizedMessage, Toast.LENGTH_LONG).show()
+            } else {
+                if (value != null && !value.isEmpty) {
+                    postList.clear()
+                    val documents = value.documents
+                    for (document in documents) {
+                        // Değerleri güvenli bir şekilde alma
+                        val userName = document.getString("userName") ?: ""
+                        val comment = document.getString("comment") ?: ""
+                        val downloadUrl = document.getString("downloadUrl") ?: ""
+                        val date = document.getTimestamp("date") ?: Timestamp.now()
+
+                        val post = Post(userName, comment, downloadUrl, date)
+                        postList.add(post)
+                    }
+                    adapter?.notifyDataSetChanged()
+                }
+            }
+        }
     }
+
 
     fun floatingActionButtonaTiklandi(view: View) {
         popup.show()
