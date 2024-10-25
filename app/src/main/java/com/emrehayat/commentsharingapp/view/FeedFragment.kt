@@ -1,6 +1,7 @@
 package com.emrehayat.commentsharingapp.view
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -63,7 +64,7 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
         binding.commentRecyclerView.adapter = adapter
     }
 
-    /*private fun verileriAlFirestore() {
+    private fun verileriAlFirestore() {
         db.collection("Posts").orderBy("date", Query.Direction.DESCENDING).addSnapshotListener { value, error ->
             if (error != null) {
                 Toast.makeText(requireContext(), error.localizedMessage, Toast.LENGTH_LONG).show()
@@ -73,7 +74,7 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
                         postList.clear()
                         val documents = value.documents
                         for (document in documents) {
-                            val userName = document.get("userName") as String
+                            val userName = document.get("userName") as? String ?: "Unknown User"
                             val comment = document.get("comment") as String
                             val downloadUrl = document.get("downloadUrl") as String
                             val date = document.get("date") as Timestamp
@@ -86,9 +87,9 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
                 }
             }
         }
-    }*/
+    }
 
-    private fun verileriAlFirestore() {
+    /*private fun verileriAlFirestore() {
         db.collection("Posts").orderBy("date", Query.Direction.DESCENDING).addSnapshotListener { value, error ->
             if (error != null) {
                 Toast.makeText(requireContext(), error.localizedMessage, Toast.LENGTH_LONG).show()
@@ -110,7 +111,7 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
                 }
             }
         }
-    }
+    }*/
 
 
     fun floatingActionButtonaTiklandi(view: View) {

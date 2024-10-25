@@ -40,6 +40,7 @@ class DownloadFragment : Fragment() {
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
     var selectedImage : Uri? = null
     var selectedBitmap : Bitmap? = null
+    private lateinit var userName: String
 
     private lateinit var auth : FirebaseAuth
     private lateinit var storage: FirebaseStorage
@@ -58,6 +59,7 @@ class DownloadFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        userName = auth.currentUser?.displayName ?: "Unknown User"
         _binding = FragmentDownloadBinding.inflate(inflater, container, false)
         val view = binding.root
         return view
@@ -70,32 +72,38 @@ class DownloadFragment : Fragment() {
     }
 
     fun yuklemeyiYap(view: View) {
-        val uuid = UUID.randomUUID()
-        val imageName = "${uuid}.jpg"
+        val userId = auth.currentUser?.uid
+        db.collection("Users").document(userId!!).get().addOnSuccessListener { document ->
+            if (document != null) {
+                userName = document.getString("userName") ?: "Unknown User"
+                val uuid = UUID.randomUUID()
+                val imageName = "$uuid.jpg"
+                val imageReference = storage.reference.child("images").child(imageName)
 
-        val reference = storage.reference
-        val imageReference = reference.child("images").child(imageName)
-        if (selectedImage != null) {
-            imageReference.putFile(selectedImage!!).addOnSuccessListener { uploadTask ->
-                imageReference.downloadUrl.addOnSuccessListener { uri ->
-                    if (auth.currentUser != null) {
+                imageReference.putFile(selectedImage!!).addOnSuccessListener {
+                    imageReference.downloadUrl.addOnSuccessListener { uri ->
                         val downloadUrl = uri.toString()
-                        val postMap = hashMapOf<String, Any>()
-                        postMap.put("downloadUrl", downloadUrl)
-                        postMap.put("comment", binding.yorumText.text.toString())
-                        postMap.put("date", Timestamp.now())
-
-                        db.collection("Posts").add(postMap).addOnSuccessListener { documentReference ->
+                        val postMap = hashMapOf(
+                            "downloadUrl" to downloadUrl,
+                            "comment" to binding.yorumText.text.toString(),
+                            "date" to Timestamp.now(),
+                            "userName" to userName
+                        )
+                        db.collection("Posts").add(postMap).addOnSuccessListener {
                             val action = DownloadFragmentDirections.actionDownloadFragmentToFeedFragment()
                             Navigation.findNavController(view).navigate(action)
                         }.addOnFailureListener { exception ->
                             Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
                         }
                     }
+                }.addOnFailureListener { exception ->
+                    Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
                 }
-            }.addOnFailureListener { exception ->
-                Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(requireContext(), "Kullanıcı adı bulunamadı.", Toast.LENGTH_SHORT).show()
             }
+        }.addOnFailureListener { exception ->
+            Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -172,3 +180,136 @@ class DownloadFragment : Fragment() {
     }
 
 }
+
+/*class DownloadFragment : Fragment() {
+
+    private var _binding: FragmentDownloadBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var permissionLauncher: ActivityResultLauncher<String>
+    var selectedImage : Uri? = null
+    var selectedBitmap : Bitmap? = null
+
+    private lateinit var auth : FirebaseAuth
+    private lateinit var storage: FirebaseStorage
+    private lateinit var db : FirebaseFirestore
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        auth = Firebase.auth
+        storage = Firebase.storage
+        db = Firebase.firestore
+        registerLaunchers()
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentDownloadBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.yukleButton.setOnClickListener { yuklemeyiYap(it) }
+        binding.imageView.setOnClickListener { gorseliSec(it) }
+    }
+
+    fun yuklemeyiYap(view: View) {
+        // Kullanıcı adını doğrudan auth.currentUser üzerinden alıyoruz.
+        val userName = auth.currentUser?.displayName ?: "Unknown User"
+
+        val uuid = UUID.randomUUID()
+        val imageName = "$uuid.jpg"
+        val imageReference = storage.reference.child("images").child(imageName)
+
+        selectedImage?.let {
+            imageReference.putFile(it).addOnSuccessListener {
+                imageReference.downloadUrl.addOnSuccessListener { uri ->
+                    val downloadUrl = uri.toString()
+                    val postMap = hashMapOf(
+                        "downloadUrl" to downloadUrl,
+                        "comment" to binding.yorumText.text.toString(),
+                        "date" to Timestamp.now(),
+                        "userName" to userName
+                    )
+                    db.collection("Posts").add(postMap).addOnSuccessListener {
+                        val action = DownloadFragmentDirections.actionDownloadFragmentToFeedFragment()
+                        Navigation.findNavController(view).navigate(action)
+                    }.addOnFailureListener { exception ->
+                        Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.addOnFailureListener { exception ->
+                Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
+            }
+        } ?: Toast.makeText(requireContext(), "Lütfen bir görsel seçin.", Toast.LENGTH_LONG).show()
+    }
+
+    fun gorseliSec(view: View) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.READ_MEDIA_IMAGES)) {
+                    Snackbar.make(view, "Galeriye gitmek için izin vermelisiniz!", Snackbar.LENGTH_INDEFINITE).setAction("İzin Ver") {
+                        permissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                    }.show()
+                } else {
+                    permissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                }
+            } else {
+                val intentToGallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                activityResultLauncher.launch(intentToGallery)
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Snackbar.make(view, "Galeriye gitmek için izin vermelisiniz!", Snackbar.LENGTH_INDEFINITE).setAction("İzin Ver") {
+                        permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    }.show()
+                } else {
+                    permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+            } else {
+                val intentToGallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                activityResultLauncher.launch(intentToGallery)
+            }
+        }
+    }
+
+    private fun registerLaunchers() {
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val intentFromResult = result.data
+                if (intentFromResult != null) {
+                    selectedImage = intentFromResult.data
+                    try {
+                        if (Build.VERSION.SDK_INT >= 28) {
+                            val source = ImageDecoder.createSource(requireActivity().contentResolver, selectedImage!!)
+                            selectedBitmap = ImageDecoder.decodeBitmap(source)
+                            binding.imageView.setImageBitmap(selectedBitmap)
+                        } else {
+                            selectedBitmap = MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, selectedImage)
+                            binding.imageView.setImageBitmap(selectedBitmap)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+        permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { result ->
+            if (result) {
+                val intentToGallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                activityResultLauncher.launch(intentToGallery)
+            } else {
+                Toast.makeText(requireContext(), "İzni reddettiniz. Lütfen, izin veriniz!", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}*/

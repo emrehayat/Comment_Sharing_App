@@ -2,8 +2,10 @@ package com.emrehayat.commentsharingapp.adapter
 
 import android.icu.text.SimpleDateFormat
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.emrehayat.commentsharingapp.R
 import com.emrehayat.commentsharingapp.databinding.RecyclerRowBinding
 import com.emrehayat.commentsharingapp.model.Post
 import com.squareup.picasso.Picasso

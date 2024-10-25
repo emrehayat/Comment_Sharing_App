@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.navigation.Navigation
 import com.emrehayat.commentsharingapp.databinding.FragmentSignUpBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -21,7 +22,6 @@ class SignUpFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = Firebase.auth
-
     }
 
     override fun onCreateView(
@@ -29,8 +29,7 @@ class SignUpFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentSignUpBinding.inflate(inflater, container, false)
-        val view = binding.root
-        return view
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,15 +37,26 @@ class SignUpFragment : Fragment() {
         binding.kayitButton2.setOnClickListener { kayitOlundu(it) }
     }
 
-    fun kayitOlundu(view: View) {
+    private fun kayitOlundu(view: View) {
         val email = binding.mailText2.text.toString()
         val password = binding.sifreText2.text.toString()
+        val userName = binding.kullaniciAdiText.text.toString()
 
-        if (email.isNotEmpty() && password.isNotEmpty()) {
+        if (email.isNotEmpty() && password.isNotEmpty() && userName.isNotEmpty()) {
             auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val action = SignUpFragmentDirections.actionSignUpFragmentToFeedFragment()
-                    Navigation.findNavController(view).navigate(action)
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(userName).build()
+
+                    auth.currentUser?.updateProfile(profileUpdates)?.addOnCompleteListener { updateTask ->
+                        if (updateTask.isSuccessful) {
+                            Toast.makeText(requireContext(), "Kayıt başarılı!", Toast.LENGTH_SHORT).show()
+                            val action = SignUpFragmentDirections.actionSignUpFragmentToFeedFragment()
+                            Navigation.findNavController(view).navigate(action)
+                        } else {
+                            Toast.makeText(requireContext(), "Kullanıcı adı güncellenemedi: ${updateTask.exception?.localizedMessage}", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 } else {
                     Toast.makeText(requireContext(), task.exception?.localizedMessage, Toast.LENGTH_LONG).show()
                 }
@@ -60,5 +70,4 @@ class SignUpFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
 }
