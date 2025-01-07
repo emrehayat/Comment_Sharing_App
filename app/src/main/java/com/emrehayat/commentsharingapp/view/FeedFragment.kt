@@ -75,11 +75,12 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
                         val documents = value.documents
                         for (document in documents) {
                             val userName = document.get("userName") as? String ?: "Unknown User"
-                            val comment = document.get("comment") as String
+                            val comment = document.get("comment") as? String ?: ""
                             val downloadUrl = document.get("downloadUrl") as String
                             val date = document.get("date") as Timestamp
+                            val userId = document.get("userId") as? String
 
-                            val post = Post(userName, comment, downloadUrl, date)
+                            val post = Post(userName, comment, downloadUrl, date, userId)
                             postList.add(post)
                         }
                         adapter?.notifyDataSetChanged()
@@ -124,13 +125,20 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
-        if (item?.itemId == R.id.yeniPaylasimItem) {
-            val action = FeedFragmentDirections.actionFeedFragmentToDownloadFragment()
-            Navigation.findNavController(requireView()).navigate(action)
-        } else if (item?.itemId == R.id.cikisYapItem) {
-            auth.signOut()
-            val action = FeedFragmentDirections.actionFeedFragmentToUserFragment()
-            Navigation.findNavController(requireView()).navigate(action)
+        when (item?.itemId) {
+            R.id.yeniPaylasimItem -> {
+                val action = FeedFragmentDirections.actionFeedFragmentToDownloadFragment()
+                Navigation.findNavController(requireView()).navigate(action)
+            }
+            R.id.profilItem -> {
+                val action = FeedFragmentDirections.actionFeedFragmentToProfileFragment()
+                Navigation.findNavController(requireView()).navigate(action)
+            }
+            R.id.cikisYapItem -> {
+                auth.signOut()
+                val action = FeedFragmentDirections.actionFeedFragmentToUserFragment()
+                Navigation.findNavController(requireView()).navigate(action)
+            }
         }
         return true
     }

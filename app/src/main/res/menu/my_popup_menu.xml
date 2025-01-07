@@ -3,7 +3,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/yeniPaylasimItem"
-        android:title="Yeni Paylaşım Yap" />
+        android:title="Yeni Paylaşım" />
+    <item
+        android:id="@+id/profilItem"
+        android:title="Profil" />
     <item
         android:id="@+id/cikisYapItem"
         android:title="Çıkış Yap" />

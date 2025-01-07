@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.emrehayat.commentsharingapp"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.emrehayat.commentsharingapp"

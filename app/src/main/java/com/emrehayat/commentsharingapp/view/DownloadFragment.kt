@@ -72,35 +72,45 @@ class DownloadFragment : Fragment() {
     }
 
     fun yuklemeyiYap(view: View) {
+        val userName = auth.currentUser?.displayName ?: "Unknown User"
         val userId = auth.currentUser?.uid
-        db.collection("Users").document(userId!!).get().addOnSuccessListener { document ->
-            if (document != null) {
-                userName = document.getString("userName") ?: "Unknown User"
-                val uuid = UUID.randomUUID()
-                val imageName = "$uuid.jpg"
-                val imageReference = storage.reference.child("images").child(imageName)
+        
+        if (selectedImage == null) {
+            Toast.makeText(requireContext(), "Lütfen bir görsel seçin.", Toast.LENGTH_LONG).show()
+            return
+        }
 
-                imageReference.putFile(selectedImage!!).addOnSuccessListener {
-                    imageReference.downloadUrl.addOnSuccessListener { uri ->
-                        val downloadUrl = uri.toString()
-                        val postMap = hashMapOf(
-                            "downloadUrl" to downloadUrl,
-                            "comment" to binding.yorumText.text.toString(),
-                            "date" to Timestamp.now(),
-                            "userName" to userName
-                        )
-                        db.collection("Posts").add(postMap).addOnSuccessListener {
-                            val action = DownloadFragmentDirections.actionDownloadFragmentToFeedFragment()
-                            Navigation.findNavController(view).navigate(action)
-                        }.addOnFailureListener { exception ->
-                            Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
-                        }
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Kullanıcı girişi yapılmamış.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val uuid = UUID.randomUUID()
+        val imageName = "$uuid.jpg"
+        val imageReference = storage.reference.child("images").child(imageName)
+
+        imageReference.putFile(selectedImage!!).addOnSuccessListener {
+            imageReference.downloadUrl.addOnSuccessListener { uri ->
+                val downloadUrl = uri.toString()
+                val comment = binding.yorumText.text.toString()
+                
+                val postMap = hashMapOf(
+                    "downloadUrl" to downloadUrl,
+                    "comment" to comment,
+                    "date" to Timestamp.now(),
+                    "userName" to userName,
+                    "userId" to userId
+                )
+
+                db.collection("Posts")
+                    .add(postMap)
+                    .addOnSuccessListener {
+                        val action = DownloadFragmentDirections.actionDownloadFragmentToFeedFragment()
+                        Navigation.findNavController(view).navigate(action)
                     }
-                }.addOnFailureListener { exception ->
-                    Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
-                }
-            } else {
-                Toast.makeText(requireContext(), "Kullanıcı adı bulunamadı.", Toast.LENGTH_SHORT).show()
+                    .addOnFailureListener { exception ->
+                        Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
+                    }
             }
         }.addOnFailureListener { exception ->
             Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
