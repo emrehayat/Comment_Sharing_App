@@ -7,5 +7,6 @@ data class Post(
     val comment: String = "",
     val downloadUrl: String = "",
     val date: Timestamp = Timestamp.now(),
-    val userId: String? = null
+    val userId: String? = null,
+    val isDeleted: Boolean = false
 )

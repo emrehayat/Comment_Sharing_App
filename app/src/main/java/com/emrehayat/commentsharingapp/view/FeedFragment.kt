@@ -65,29 +65,34 @@ class FeedFragment : Fragment() , PopupMenu.OnMenuItemClickListener {
     }
 
     private fun verileriAlFirestore() {
-        db.collection("Posts").orderBy("date", Query.Direction.DESCENDING).addSnapshotListener { value, error ->
-            if (error != null) {
-                Toast.makeText(requireContext(), error.localizedMessage, Toast.LENGTH_LONG).show()
-            } else {
-                if (value != null) {
-                    if (!value.isEmpty) {
-                        postList.clear()
-                        val documents = value.documents
-                        for (document in documents) {
-                            val userName = document.get("userName") as? String ?: "Unknown User"
-                            val comment = document.get("comment") as? String ?: ""
-                            val downloadUrl = document.get("downloadUrl") as String
-                            val date = document.get("date") as Timestamp
-                            val userId = document.get("userId") as? String
+        db.collection("Posts")
+            .orderBy("date", Query.Direction.DESCENDING)
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    Toast.makeText(requireContext(), error.localizedMessage, Toast.LENGTH_LONG).show()
+                } else {
+                    if (value != null) {
+                        if (!value.isEmpty) {
+                            postList.clear()
+                            val documents = value.documents
+                            for (document in documents) {
+                                val userName = document.get("userName") as? String ?: "Unknown User"
+                                val comment = document.get("comment") as? String ?: ""
+                                val downloadUrl = document.get("downloadUrl") as String
+                                val date = document.get("date") as Timestamp
+                                val userId = document.get("userId") as? String
+                                val isDeleted = document.get("isDeleted") as? Boolean ?: false
 
-                            val post = Post(userName, comment, downloadUrl, date, userId)
-                            postList.add(post)
+                                if (!isDeleted) {
+                                    val post = Post(userName, comment, downloadUrl, date, userId, isDeleted)
+                                    postList.add(post)
+                                }
+                            }
+                            adapter?.notifyDataSetChanged()
                         }
-                        adapter?.notifyDataSetChanged()
                     }
                 }
             }
-        }
     }
 
     /*private fun verileriAlFirestore() {

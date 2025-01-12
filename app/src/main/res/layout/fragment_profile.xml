@@ -39,6 +39,17 @@
         app:layout_constraintTop_toBottomOf="@+id/buttonUpdateUsername" />
 
     <Button
+        android:id="@+id/buttonDeletedPosts"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Silinen Gönderiler"
+        android:backgroundTint="#2196F3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonGoToFeed" />
+
+    <Button
         android:id="@+id/buttonDeletePosts"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -47,7 +58,7 @@
         android:backgroundTint="#FF9800"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonGoToFeed" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonDeletedPosts" />
 
     <Button
         android:id="@+id/buttonDeleteAccount"

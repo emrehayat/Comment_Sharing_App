@@ -53,11 +53,15 @@ class ProfileFragment : Fragment() {
         }
 
         binding.buttonDeleteAccount.setOnClickListener {
-            deleteUserAccount()
+            showDeleteAccountConfirmationDialog()
         }
 
         binding.buttonDeletePosts.setOnClickListener {
-            deleteUserPosts()
+            showDeletePostsConfirmationDialog()
+        }
+
+        binding.buttonDeletedPosts.setOnClickListener {
+            showDeletedPosts()
         }
 
         binding.buttonGoToFeed.setOnClickListener {
@@ -114,51 +118,17 @@ class ProfileFragment : Fragment() {
                 var deletedCount = 0
                 val totalPosts = documents.size()
 
-                documents.forEach { document ->
-                    // Önce resmi Storage'dan sil
-                    val downloadUrl = document.getString("downloadUrl")
-                    if (downloadUrl != null) {
-                        try {
-                            val imageRef = storage.getReferenceFromUrl(downloadUrl)
-                            imageRef.delete().addOnSuccessListener {
-                                // Resim silindikten sonra postu sil
-                                document.reference.delete()
-                                    .addOnSuccessListener {
-                                        deletedCount++
-                                        if (deletedCount == totalPosts) {
-                                            Toast.makeText(requireContext(), "Tüm gönderiler silindi", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                            }.addOnFailureListener { e ->
-                                // Resim silinmese bile postu silelim
-                                document.reference.delete()
-                                    .addOnSuccessListener {
-                                        deletedCount++
-                                        if (deletedCount == totalPosts) {
-                                            Toast.makeText(requireContext(), "Tüm gönderiler silindi", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
+                for (document in documents) {
+                    document.reference.update("isDeleted", true)
+                        .addOnSuccessListener {
+                            deletedCount++
+                            if (deletedCount == totalPosts) {
+                                Toast.makeText(requireContext(), "Tüm gönderiler silindi", Toast.LENGTH_SHORT).show()
                             }
-                        } catch (e: Exception) {
-                            // URL geçersiz olsa bile postu silelim
-                            document.reference.delete()
-                                .addOnSuccessListener {
-                                    deletedCount++
-                                    if (deletedCount == totalPosts) {
-                                        Toast.makeText(requireContext(), "Tüm gönderiler silindi", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
                         }
-                    } else {
-                        // Resim URL'i yoksa direkt postu sil
-                        document.reference.delete()
-                            .addOnSuccessListener {
-                                deletedCount++
-                                if (deletedCount == totalPosts) {
-                                    Toast.makeText(requireContext(), "Tüm gönderiler silindi", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(requireContext(), "Hata: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        }
                 }
             }
             .addOnFailureListener { e ->
@@ -256,6 +226,131 @@ class ProfileFragment : Fragment() {
                 } else {
                     Toast.makeText(requireContext(), "Hesap silinemedi: ${e.message}", Toast.LENGTH_LONG).show()
                 }
+            }
+    }
+
+    private fun showDeletePostsConfirmationDialog() {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Gönderileri Sil")
+            .setMessage("Tüm gönderileriniz silinecek. Bu işlem geri alınamaz. Emin misiniz?")
+            .setPositiveButton("Evet") { _, _ ->
+                deleteUserPosts()
+            }
+            .setNegativeButton("Hayır", null)
+            .show()
+    }
+
+    private fun showDeleteAccountConfirmationDialog() {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Hesabı Sil")
+            .setMessage("Hesabınız ve tüm gönderileriniz kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misiniz?")
+            .setPositiveButton("Evet") { _, _ ->
+                deleteUserAccount()
+            }
+            .setNegativeButton("Hayır", null)
+            .show()
+    }
+
+    private fun showDeletedPosts() {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Kullanıcı girişi yapılmamış.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        db.collection("Posts")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("isDeleted", true)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    Toast.makeText(requireContext(), "Silinen gönderi bulunamadı", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
+                val deletedPosts = documents.mapNotNull { document ->
+                    val userName = document.get("userName") as? String ?: return@mapNotNull null
+                    val comment = document.get("comment") as? String ?: ""
+                    
+                    Triple(document.id, userName, comment)
+                }
+
+                if (deletedPosts.isEmpty()) {
+                    Toast.makeText(requireContext(), "Silinen gönderi bulunamadı", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
+                showDeletedPostsDialog(deletedPosts)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Hata: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun showDeletedPostsDialog(deletedPosts: List<Triple<String, String, String>>) {
+        val postItems = deletedPosts.map { (_, userName, comment) ->
+            if (comment.isNotEmpty()) {
+                "📝 $userName: $comment"
+            } else {
+                "🖼️ $userName (Sadece Görsel)"
+            }
+        }.toTypedArray()
+
+        val message = StringBuilder()
+        message.append("Silinen Gönderiler:\n\n")
+        postItems.forEachIndexed { index, post ->
+            message.append("${index + 1}. $post\n\n")
+        }
+        message.append("\nGeri yüklemek istediğiniz gönderinin numarasını seçin:")
+
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Silinen Gönderiler")
+            .setMessage(message.toString())
+            .setPositiveButton("Geri Yükle") { _, _ ->
+                showPostSelectionDialog(deletedPosts)
+            }
+            .setNegativeButton("Kapat", null)
+            .show()
+    }
+
+    private fun showPostSelectionDialog(deletedPosts: List<Triple<String, String, String>>) {
+        val postItems = deletedPosts.map { (_, userName, comment) ->
+            if (comment.isNotEmpty()) {
+                "📝 $userName: $comment"
+            } else {
+                "🖼️ $userName (Sadece Görsel)"
+            }
+        }.toTypedArray()
+
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Gönderi Seç")
+            .setItems(postItems) { _, position ->
+                showRestoreConfirmationDialog(deletedPosts[position].first)
+            }
+            .setNegativeButton("İptal", null)
+            .show()
+    }
+
+    private fun showRestoreConfirmationDialog(documentId: String) {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Gönderiyi Geri Yükle")
+            .setMessage("Bu gönderi ana sayfanızda tekrar görünür olacak. Geri yüklemek istediğinize emin misiniz?")
+            .setPositiveButton("Evet, Geri Yükle") { _, _ ->
+                restorePost(documentId)
+            }
+            .setNegativeButton("Vazgeç", null)
+            .show()
+    }
+
+    private fun restorePost(documentId: String) {
+        db.collection("Posts")
+            .document(documentId)
+            .update("isDeleted", false)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Gönderi geri yüklendi", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Hata: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
     }
 

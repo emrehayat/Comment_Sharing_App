@@ -99,7 +99,8 @@ class DownloadFragment : Fragment() {
                     "comment" to comment,
                     "date" to Timestamp.now(),
                     "userName" to userName,
-                    "userId" to userId
+                    "userId" to userId,
+                    "isDeleted" to false
                 )
 
                 db.collection("Posts")
