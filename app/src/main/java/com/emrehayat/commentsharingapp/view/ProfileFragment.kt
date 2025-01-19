@@ -67,6 +67,14 @@ class ProfileFragment : Fragment() {
         binding.buttonGoToFeed.setOnClickListener {
             Navigation.findNavController(it).navigate(R.id.action_profileFragment_to_feedFragment)
         }
+
+        binding.buttonLikedPosts.setOnClickListener {
+            Navigation.findNavController(it).navigate(R.id.action_profileFragment_to_likedPostsFragment)
+        }
+
+        binding.buttonSavedPosts.setOnClickListener {
+            Navigation.findNavController(it).navigate(R.id.action_profileFragment_to_savedPostsFragment)
+        }
     }
 
     private fun updateUsername(newUsername: String) {

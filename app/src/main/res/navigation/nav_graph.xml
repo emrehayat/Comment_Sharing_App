@@ -61,5 +61,21 @@
         <action
             android:id="@+id/action_profileFragment_to_feedFragment"
             app:destination="@id/feedFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_likedPostsFragment"
+            app:destination="@id/likedPostsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_savedPostsFragment"
+            app:destination="@id/savedPostsFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/likedPostsFragment"
+        android:name="com.emrehayat.commentsharingapp.view.LikedPostsFragment"
+        android:label="fragment_liked_posts"
+        tools:layout="@layout/fragment_liked_posts" />
+    <fragment
+        android:id="@+id/savedPostsFragment"
+        android:name="com.emrehayat.commentsharingapp.view.SavedPostsFragment"
+        android:label="fragment_saved_posts"
+        tools:layout="@layout/fragment_saved_posts" />
 </navigation>

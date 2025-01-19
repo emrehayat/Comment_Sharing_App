@@ -39,6 +39,28 @@
         app:layout_constraintTop_toBottomOf="@+id/buttonUpdateUsername" />
 
     <Button
+        android:id="@+id/buttonLikedPosts"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Beğendiğim Gönderiler"
+        android:backgroundTint="#E91E63"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonGoToFeed" />
+
+    <Button
+        android:id="@+id/buttonSavedPosts"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Kaydedilenler"
+        android:backgroundTint="#9C27B0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonLikedPosts" />
+
+    <Button
         android:id="@+id/buttonDeletedPosts"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -47,7 +69,7 @@
         android:backgroundTint="#2196F3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonGoToFeed" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonSavedPosts" />
 
     <Button
         android:id="@+id/buttonDeletePosts"
